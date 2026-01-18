@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Point Culinary Logistics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/alasql@1.7/dist/alasql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Zero-Point Agent</h1>
+            <p class="subtitle">Culinary Logistics for Zero Waste</p>
+            <button onclick="toggleInventoryView()"
+                style="background: transparent; border: 1px solid var(--primary-accent); color: var(--primary-accent); padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; font-size: 0.8rem;">
+                📦 Inventory
+            </button>
+        </header>
+
+
+
+        <!-- TAB 1: SCANNER & INPUT -->
+        <!-- MAIN CONTENT -->
+        <div id="tab-scanner" class="tab-content active">
+
+            <!-- Manual Inputs First -->
+            <section class="glass-panel input-section">
+                <div class="form-group">
+                    <label>Focus on Inventory</label>
+                    <input type="text" id="expiring" placeholder="Ingredient (e.g. Spinach)" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="pantry">Pantry Stock</label>
+                    <input type="text" id="pantry" placeholder="e.g., Rice, Pasta, Eggs, Onions" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="preferences">Dietary / Dislikes</label>
+                    <input type="text" id="preferences" placeholder="e.g., No meat, gluten-free" autocomplete="off">
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 10px;">
+                    <label>Batch Inventory (Name & Quantity)</label>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px;">
+                        <input type="text" id="batch-input" placeholder="Ingredients (e.g. Milk)" autocomplete="off">
+                        <input type="text" id="batch-qty" placeholder="Qty (e.g. 1L)" autocomplete="off">
+                        <button id="add-btn" class="action-btn" style="margin-top: 0; padding: 16px; width: auto;"
+                            onclick="addToInventory()">Add</button>
+                    </div>
+                </div>
+
+                <button class="action-btn" onclick="generateLogisticsPlan()">GeneratE Zero-Waste Plan</button>
+            </section>
+
+            <!-- Supported Ingredients Library -->
+            <section class="glass-panel" style="margin-top: 20px; text-align: center;">
+                <p
+                    style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">
+                    Supported Intelligence Library</p>
+                <div id="library-container" class="library-grid">
+                    <!-- Tags injected by script -->
+                </div>
+            </section>
+
+            <!-- Excel Scanner -->
+            <section class="glass-panel" style="margin-top: 24px; border-color: var(--secondary-accent);">
+                <h2 style="color: var(--secondary-accent); font-size: 1.3rem; margin-bottom: 16px;">📸 Universal Scanner
+                </h2>
+                <div style="display: grid; gap: 16px;">
+                    <label for="universal-upload"
+                        style="cursor: pointer; border: 2px dashed var(--glass-border); padding: 24px; border-radius: 12px; text-align: center; transition: all 0.2s ease;">
+                        <span style="display: block; font-size: 2rem; margin-bottom: 8px;">📤</span>
+                        <span style="color: var(--text-muted);">Upload <b>Excel</b> (.xlsx) or <b>Image</b>
+                            (.jpg/png)</span>
+                        <input type="file" id="universal-upload" style="display: none;"
+                            accept=".xlsx, .xls, .jpg, .jpeg, .png, .webp" onchange="handleUniversalUpload(this)">
+                    </label>
+                </div>
+
+                <div id="scan-results" style="display: none; margin-top: 20px;">
+                    <p id="scan-status" style="color: var(--text-muted);">Processing...</p>
+                </div>
+            </section>
+        </div>
+
+
+
+        <!-- TAB 3: RESULTS / RECIPES -->
+        <div id="tab-results" class="tab-content">
+            <div id="results" class="results-container" style="display: grid;">
+                <!-- Recipe Hub -->
+                <div class="glass-panel result-card" style="grid-column: 1 / -1;">
+                    <h2>👨‍🍳 Recipe Hub</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 16px;">Based on your current inventory &
+                        preferences.</p>
+                    <div id="recipe-hub-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                        <p style="color: var(--text-muted); font-style: italic;">No plan generated yet. Go to 'Plan &
+                            Scan' to start and Click Generate Plan.</p>
+                    </div>
+                </div>
+
+                <!-- Strategic Overview -->
+                <div class="glass-panel result-card">
+                    <h3>📊 Logistics Strategy</h3>
+                    <div class="waste-saved-badge" id="waste-saved">Saved: 0.0kg</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Day 1:</strong> <span id="day1-plan">-</span><br><br>
+                        <strong>Day 2:</strong> <span id="day2-plan">-</span>
+                    </div>
+                </div>
+
+                <!-- Tactics & Shopping -->
+                <div class="glass-panel result-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h2>🛒 Shopping List</h2>
+                        <button onclick="copyShoppingList()"
+                            style="background: var(--glass-border); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">📋
+                            Copy List</button>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Missing ingredients to complete your meals.
+                    </p>
+
+                    <div id="shopping-list-container">
+                        <!-- Categorized lists go here -->
+                        <ul id="shopping-list" class="shopping-list"></ul>
+                    </div>
+
+                    <h3 style="margin-top: 24px; color: var(--urgent-accent); font-size: 1rem;">💡 Efficiency Tip</h3>
+                    <p id="efficiency-tip" class="plan-strategy efficiency-tip">...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INVENTORY MODAL -->
+    <div id="db-modal" class="glass-panel"
+        style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; z-index: 1000; background: rgba(10, 10, 15, 0.95); box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 1px solid var(--primary-accent);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="color: var(--primary-accent);">Inventory</h2>
+                <button onclick="clearInventory()"
+                    style="background: rgba(255, 0, 0, 0.2); border: 1px solid red; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">Clear
+                    All</button>
+            </div>
+            <button onclick="toggleInventoryView()"
+                style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <div id="db-inventory-view">
+            <!-- Injected Table -->
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script src="backend.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
